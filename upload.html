@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload Lecture</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 text-gray-800">
+
+  <div class="container mx-auto p-4 max-w-xl">
+
+    <h1 class="text-3xl font-bold mb-6 text-center">Upload New Lecture</h1>
+
+    <form action="/upload" method="post" enctype="multipart/form-data" class="space-y-4 bg-white rounded-lg p-6 shadow">
+
+      <div>
+        <label class="block font-medium">Lecture Title</label>
+        <input type="text" name="title" required class="w-full p-2 border rounded-md">
+      </div>
+
+      <div>
+        <label class="block font-medium">Description</label>
+        <textarea name="description" rows="3" class="w-full p-2 border rounded-md"></textarea>
+      </div>
+
+      <div>
+        <label class="block font-medium">Audio File (MP3)</label>
+        <input type="file" name="audio_file" accept="audio/*" required class="w-full">
+      </div>
+
+      <div>
+        <label class="block font-medium">Slides File (PDF)</label>
+        <input type="file" name="slide_file" accept="application/pdf" required class="w-full">
+      </div>
+
+      <div>
+        <label class="block font-medium">Video File (MP4)</label>
+        <input type="file" name="video_file" accept="video/mp4" required class="w-full">
+      </div>
+
+      <button type="submit"
+              class="w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700">
+        Upload Lecture
+      </button>
+
+    </form>
+
+    <a href="{{ url_for('index') }}" class="mt-4 inline-block text-indigo-600 hover:underline">Back to Home</a>
+
+  </div>
+
+</body>
+</html>

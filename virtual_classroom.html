@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Classroom</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts - Inter -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        /* Custom scrollbar for gallery and chat */
+        .scrollbar-hidden::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hidden {
+            -ms-overflow-style: none; /* IE and Edge */
+            scrollbar-width: none; /* Firefox */
+        }
+        /* Message box animation */
+        .message-box {
+            animation: fade-in 0.5s ease-out;
+        }
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 h-screen overflow-hidden flex flex-col">
+
+    <!-- Message Box -->
+    <div id="message-box" class="message-box fixed top-4 right-4 z-50 p-4 bg-gray-800 rounded-lg shadow-lg max-w-sm hidden">
+        <p id="message-text" class="text-sm"></p>
+        <button onclick="document.getElementById('message-box').classList.add('hidden')" class="absolute top-1 right-2 text-gray-400 hover:text-white">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+        </button>
+    </div>
+
+    <!-- Main Application Container -->
+    <div class="flex-grow flex flex-col md:flex-row p-4 space-y-4 md:space-y-0 md:space-x-4">
+        <!-- Main Video Stage and Gallery -->
+        <main class="flex-grow flex flex-col space-y-4">
+            <!-- Top Participant Gallery -->
+            <div id="gallery" class="flex-shrink-0 flex items-center justify-start overflow-x-scroll scrollbar-hidden space-x-2 md:space-x-4 p-2">
+                <!-- Gallery Item (Template) -->
+                <div class="gallery-item flex-none w-28 md:w-48 h-20 md:h-32 rounded-xl bg-gray-700/50 relative overflow-hidden ring-2 ring-transparent transition-all duration-300">
+                    <video class="w-full h-full object-cover"></video>
+                    <div class="absolute bottom-1 left-2 bg-black/50 text-white text-xs px-2 py-0.5 rounded-full font-medium">User 1</div>
+                    <div class="absolute top-1 right-1 p-1 bg-black/50 rounded-full">
+                        <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10 9a3 3 0 100-6 3 3 0 000 6zM2 20a8 8 0 1116 0H2z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Video Stage -->
+            <div id="main-stage" class="flex-grow bg-gray-800 rounded-xl relative overflow-hidden flex items-center justify-center p-2">
+                <video class="w-full h-full object-contain rounded-lg shadow-xl" autoplay playsinline muted></video>
+                <div class="absolute bottom-4 left-4 bg-black/50 text-white text-lg px-4 py-1.5 rounded-full font-semibold">Active Speaker</div>
+            </div>
+        </main>
+
+        <!-- Right Sidebar for Chat and Participants -->
+        <aside id="sidebar" class="flex-none w-full md:w-80 bg-gray-800 rounded-xl flex flex-col overflow-hidden transition-transform duration-300 transform md:translate-x-0 -translate-x-full">
+            <div class="flex-none p-4 border-b border-gray-700">
+                <h2 class="text-xl font-semibold text-center">Chat & Participants</h2>
+            </div>
+            
+            <!-- Tabs -->
+            <div class="flex-none flex justify-around p-2 bg-gray-900 border-b border-gray-700">
+                <button id="chat-tab" class="flex-grow py-2 rounded-md font-medium text-white bg-gray-700">Chat</button>
+                <button id="participants-tab" class="flex-grow py-2 rounded-md font-medium text-gray-400 hover:text-white transition-colors duration-200">Participants</button>
+            </div>
+
+            <!-- Tab Content -->
+            <div id="chat-content" class="flex-grow p-4 space-y-4 overflow-y-auto scrollbar-hidden">
+                <!-- Chat messages -->
+                <div class="flex items-start space-x-2">
+                    <span class="font-bold text-sky-400">Gemini:</span>
+                    <p class="text-sm">Hi! Welcome to the virtual classroom. Feel free to use the "Research Assistant" to ask me questions.</p>
+                </div>
+                <div class="flex items-start space-x-2">
+                    <span class="font-bold text-lime-400">Ben:</span>
+                    <p class="text-sm">Great, thanks! Looking forward to the presentation.</p>
+                </div>
+            </div>
+            <div id="participants-content" class="flex-grow p-4 space-y-2 overflow-y-auto scrollbar-hidden hidden">
+                <!-- Participant List -->
+                <div class="flex items-center space-x-3 p-2 bg-gray-700 rounded-lg">
+                    <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-sm font-bold">AS</div>
+                    <span class="font-medium flex-grow">Active Speaker</span>
+                    <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zM2 20a8 8 0 1116 0H2z" clip-rule="evenodd"></path>
+                    </svg>
+                </div>
+                <div class="flex items-center space-x-3 p-2 bg-gray-900 rounded-lg">
+                    <div class="w-8 h-8 rounded-full bg-pink-500 flex items-center justify-center text-sm font-bold">U1</div>
+                    <span class="font-medium flex-grow">User 1</span>
+                    <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zM2 20a8 8 0 1116 0H2z" clip-rule="evenodd"></path>
+                    </svg>
+                    <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M19 10a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Chat Input -->
+            <div id="chat-input-area" class="flex-none p-4 border-t border-gray-700">
+                <div class="flex space-x-2">
+                    <input id="chat-input" type="text" placeholder="Send a message..." class="flex-grow px-4 py-2 rounded-full bg-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <button id="send-chat-btn" class="flex-shrink-0 p-2.5 rounded-full bg-blue-600 hover:bg-blue-700 transition-colors duration-200">
+                        <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 00.158.544l7 3.5a1 1 0 00.906 0l7-3.5a1 1 0 00.158-.544l-7-14zM9 13.5l-6-3 6-3v6z"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="mt-2 text-sm text-gray-400 text-center">Use this for general chat.</div>
+            </div>
+
+            <!-- Gemini Research Assistant Input -->
+            <div id="gemini-input-area" class="flex-none p-4 border-t border-gray-700">
+                <div class="flex space-x-2">
+                    <input id="gemini-input" type="text" placeholder="Ask Gemini anything..." class="flex-grow px-4 py-2 rounded-full bg-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    <button id="gemini-btn" class="flex-shrink-0 p-2.5 rounded-full bg-purple-600 hover:bg-purple-700 transition-colors duration-200">
+                        <span class="text-white text-xs font-bold">✨</span>
+                    </button>
+                </div>
+                <div class="mt-2 text-sm text-gray-400 text-center">Get grounded answers from the web.</div>
+            </div>
+        </aside>
+
+    </div>
+
+    <!-- Bottom Control Bar -->
+    <footer class="flex-none bg-gray-800 p-4 flex items-center justify-between space-x-4 md:space-x-8">
+        
+        <!-- Sidebar Toggle (Mobile only) -->
+        <button id="sidebar-toggle" class="md:hidden p-3 rounded-full bg-gray-700 text-white hover:bg-gray-600 transition-colors duration-200">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path>
+            </svg>
+        </button>
+
+        <!-- Main Controls -->
+        <div class="flex items-center space-x-4 md:space-x-6 mx-auto">
+            <button id="mic-toggle" class="p-4 rounded-full bg-red-600 hover:bg-red-700 transition-colors duration-200">
+                <!-- Mic Off -->
+                <svg id="mic-off-icon" class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm7 10a1 1 0 01-1 1H7a1 1 0 01-1-1v-4a1 1 0 012 0v4a1 1 0 002 0v-4a1 1 0 012 0v4a1 1 0 01-1 1h-2a1 1 0 00-1 1v2a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 00-1-1zm3 1a1 1 0 011 1v2a1 1 0 11-2 0v-2a1 1 0 011-1z" clip-rule="evenodd"></path>
+                </svg>
+                <!-- Mic On (hidden by default) -->
+                <svg id="mic-on-icon" class="w-6 h-6 text-white hidden" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm7 10a1 1 0 011 1v2a1 1 0 11-2 0v-2a1 1 0 011-1z" clip-rule="evenodd"></path>
+                </svg>
+            </button>
+            <button id="camera-toggle" class="p-4 rounded-full bg-red-600 hover:bg-red-700 transition-colors duration-200">
+                <!-- Camera Off -->
+                <svg id="camera-off-icon" class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M4 4H2a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2h-2V2a2 2 0 00-2-2H8a2 2 0 00-2 2v2H4zM10 8a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
+                    <path fill-rule="evenodd" d="M12 11a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"></path>
+                </svg>
+                <!-- Camera On (hidden by default) -->
+                <svg id="camera-on-icon" class="w-6 h-6 text-white hidden" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M4 4H2a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2h-2V2a2 2 0 00-2-2H8a2 2 0 00-2 2v2H4zM10 8a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
+                </svg>
+            </button>
+            <button id="export-chat-btn" class="p-4 rounded-full bg-gray-700 hover:bg-gray-600 transition-colors duration-200">
+                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M13 8V2H7v6H2l8 8 8-8h-5zM0 18h20v2H0v-2z"></path>
+                </svg>
+            </button>
+            <button class="p-4 rounded-full bg-gray-700 hover:bg-gray-600 transition-colors duration-200">
+                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-7 7A2 2 0 0110 15.01V12h3a1 1 0 100-2h-3V7a1 1 0 00-1-1h-2a1 1 0 00-1 1v2.586L4.707 9.707a2 2 0 11-2.828-2.828l7-7a2 2 0 012.828 0z" clip-rule="evenodd"></path>
+                </svg>
+            </button>
+            <button id="summarize-btn" class="p-4 rounded-full bg-purple-600 hover:bg-purple-700 transition-colors duration-200">
+                <span class="text-white text-xs font-bold">✨</span>
+            </button>
+            <button id="read-aloud-btn" class="p-4 rounded-full bg-purple-600 hover:bg-purple-700 transition-colors duration-200">
+                <span class="text-white text-xs font-bold">✨</span>
+            </button>
+            <button class="p-4 rounded-full bg-red-500 hover:bg-red-600 transition-colors duration-200">
+                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10 8.586L2.929 1.515 1.515 2.929 8.586 10l-7.071 7.071 1.414 1.414L10 11.414l7.071 7.071 1.414-1.414L11.414 10l7.071-7.071-1.414-1.414L10 8.586z"></path>
+                </svg>
+            </button>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            const chatTab = document.getElementById('chat-tab');
+            const participantsTab = document.getElementById('participants-tab');
+            const chatContent = document.getElementById('chat-content');
+            const participantsContent = document.getElementById('participants-content');
+            const chatInputArea = document.getElementById('chat-input-area');
+            const geminiInputArea = document.getElementById('gemini-input-area');
+            const micToggleBtn = document.getElementById('mic-toggle');
+            const micOnIcon = document.getElementById('mic-on-icon');
+            const micOffIcon = document.getElementById('mic-off-icon');
+            const cameraToggleBtn = document.getElementById('camera-toggle');
+            const cameraOnIcon = document.getElementById('camera-on-icon');
+            const cameraOffIcon = document.getElementById('camera-off-icon');
+            const chatInput = document.getElementById('chat-input');
+            const sendChatBtn = document.getElementById('send-chat-btn');
+            const geminiInput = document.getElementById('gemini-input');
+            const geminiBtn = document.getElementById('gemini-btn');
+            const summarizeBtn = document.getElementById('summarize-btn');
+            const readAloudBtn = document.getElementById('read-aloud-btn');
+            const messageBox = document.getElementById('message-box');
+            const messageText = document.getElementById('message-text');
+            const exportChatBtn = document.getElementById('export-chat-btn');
+
+            let isMicMuted = true;
+            let isCameraOff = true;
+            let isSidebarOpen = false;
+
+            // Show a welcome message from Gemini
+            showMessage("Gemini: Welcome to the virtual classroom! The chat is active. Use the ✨ buttons to try out some smart features.");
+
+            // Helper function to show messages in the toast
+            function showMessage(text) {
+                messageText.innerHTML = text;
+                messageBox.classList.remove('hidden');
+            }
+
+            // Function to handle API calls with exponential backoff
+            async function callApi(url, payload, retries = 3, delay = 1000) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (!response.ok) {
+                        if (retries > 0) {
+                            await new Promise(res => setTimeout(res, delay));
+                            return callApi(url, payload, retries - 1, delay * 2);
+                        }
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                } catch (error) {
+                    throw error;
+                }
+            }
+
+            // Text-to-Speech API Helper
+            function pcmToWav(pcm16, sampleRate) {
+                const pcmData = pcm16.buffer;
+                const view = new DataView(pcmData);
+                const wavBuffer = new ArrayBuffer(44 + pcmData.byteLength);
+                const wavView = new DataView(wavBuffer);
+                let byteOffset = 0;
+
+                // RIFF header
+                wavView.setUint32(byteOffset, 0x52494646, false); byteOffset += 4; // "RIFF"
+                wavView.setUint32(byteOffset, 36 + pcmData.byteLength, true); byteOffset += 4; // file size
+                wavView.setUint32(byteOffset, 0x57415645, false); byteOffset += 4; // "WAVE"
+                
+                // FMT sub-chunk
+                wavView.setUint32(byteOffset, 0x666d7420, false); byteOffset += 4; // "fmt "
+                wavView.setUint32(byteOffset, 16, true); byteOffset += 4; // sub-chunk size
+                wavView.setUint16(byteOffset, 1, true); byteOffset += 2; // audio format (1 = PCM)
+                wavView.setUint16(byteOffset, 1, true); byteOffset += 2; // number of channels
+                wavView.setUint32(byteOffset, sampleRate, true); byteOffset += 4; // sample rate
+                wavView.setUint32(byteOffset, sampleRate * 2, true); byteOffset += 4; // byte rate
+                wavView.setUint16(byteOffset, 2, true); byteOffset += 2; // block align
+                wavView.setUint16(byteOffset, 16, true); byteOffset += 2; // bits per sample
+                
+                // Data sub-chunk
+                wavView.setUint32(byteOffset, 0x64617461, false); byteOffset += 4; // "data"
+                wavView.setUint32(byteOffset, pcmData.byteLength, true); byteOffset += 4; // data size
+                
+                // Write the PCM data
+                for (let i = 0; i < pcmData.byteLength; i++) {
+                    wavView.setUint8(byteOffset + i, view.getUint8(i));
+                }
+
+                return new Blob([wavBuffer], { type: 'audio/wav' });
+            }
+
+            // Sidebar Toggle for Mobile
+            sidebarToggle.addEventListener('click', () => {
+                isSidebarOpen = !isSidebarOpen;
+                if (isSidebarOpen) {
+                    sidebar.classList.remove('-translate-x-full');
+                } else {
+                    sidebar.classList.add('-translate-x-full');
+                }
+            });
+
+            // Tab Switching Logic
+            function setActiveTab(tab) {
+                chatTab.classList.toggle('bg-gray-700', tab === 'chat');
+                chatTab.classList.toggle('text-white', tab === 'chat');
+                chatTab.classList.toggle('text-gray-400', tab !== 'chat');
+                chatTab.classList.toggle('hover:text-white', tab !== 'chat');
+                
+                participantsTab.classList.toggle('bg-gray-700', tab === 'participants');
+                participantsTab.classList.toggle('text-white', tab === 'participants');
+                participantsTab.classList.toggle('text-gray-400', tab !== 'participants');
+                participantsTab.classList.toggle('hover:text-white', tab !== 'participants');
+
+                chatContent.classList.toggle('hidden', tab !== 'chat');
+                participantsContent.classList.toggle('hidden', tab !== 'participants');
+                chatInputArea.classList.toggle('hidden', tab !== 'chat');
+                geminiInputArea.classList.toggle('hidden', tab !== 'chat');
+            }
+
+            chatTab.addEventListener('click', () => setActiveTab('chat'));
+            participantsTab.addEventListener('click', () => setActiveTab('participants'));
+            setActiveTab('chat'); // Default tab
+
+            // Mic and Camera Toggles (visual only)
+            micToggleBtn.addEventListener('click', () => {
+                isMicMuted = !isMicMuted;
+                micToggleBtn.classList.toggle('bg-red-600', isMicMuted);
+                micToggleBtn.classList.toggle('bg-gray-700', !isMicMuted);
+                micOffIcon.classList.toggle('hidden', !isMicMuted);
+                micOnIcon.classList.toggle('hidden', isMicMuted);
+            });
+
+            cameraToggleBtn.addEventListener('click', () => {
+                isCameraOff = !isCameraOff;
+                cameraToggleBtn.classList.toggle('bg-red-600', isCameraOff);
+                cameraToggleBtn.classList.toggle('bg-gray-700', !isCameraOff);
+                cameraOffIcon.classList.toggle('hidden', !isCameraOff);
+                cameraOnIcon.classList.toggle('hidden', isCameraOff);
+            });
+            
+            // Send regular chat message
+            sendChatBtn.addEventListener('click', () => {
+                const message = chatInput.value.trim();
+                if (message) {
+                    const newMessage = document.createElement('div');
+                    newMessage.classList.add('flex', 'items-start', 'space-x-2');
+                    newMessage.innerHTML = `<span class="font-bold text-gray-300">User:</span><p class="text-sm">${message}</p>`;
+                    chatContent.appendChild(newMessage);
+                    chatInput.value = '';
+                    chatContent.scrollTop = chatContent.scrollHeight;
+                }
+            });
+
+            // Gemini Research Assistant
+            geminiBtn.addEventListener('click', async () => {
+                const prompt = geminiInput.value.trim();
+                if (!prompt) return;
+
+                showMessage("Gemini is thinking...");
+                geminiInput.value = '';
+
+                const payload = {
+                    contents: [{ parts: [{ text: prompt }] }],
+                    tools: [{ "google_search": {} }],
+                    systemInstruction: {
+                        parts: [{ text: "You are a helpful virtual classroom assistant. Provide a concise, single-paragraph response to the user's query. Only use information from the provided web search results." }]
+                    }
+                };
+                
+                try {
+                    const response = await callApi(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=`, payload);
+                    const text = response?.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (text) {
+                        const newMessage = document.createElement('div');
+                        newMessage.classList.add('flex', 'items-start', 'space-x-2');
+                        newMessage.innerHTML = `<span class="font-bold text-purple-400">Gemini ✨:</span><p class="text-sm">${text}</p>`;
+                        chatContent.appendChild(newMessage);
+                        chatContent.scrollTop = chatContent.scrollHeight;
+                        showMessage("Response received!");
+                    } else {
+                        showMessage("Sorry, I couldn't get a response. Please try again.");
+                    }
+                } catch (error) {
+                    showMessage("Failed to get a response. Check the console for details.");
+                    console.error("Gemini API Error:", error);
+                }
+            });
+
+            // Summarize Chat Feature
+            summarizeBtn.addEventListener('click', async () => {
+                const chatMessages = Array.from(chatContent.querySelectorAll('p')).map(p => p.textContent).join('\n');
+                if (!chatMessages.trim()) {
+                    showMessage("No chat messages to summarize.");
+                    return;
+                }
+
+                showMessage("Summarizing the conversation...");
+                
+                const payload = {
+                    contents: [{ parts: [{ text: `Summarize the following chat conversation into a single, concise paragraph:\n\n${chatMessages}` }] }],
+                };
+                
+                try {
+                    const response = await callApi(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=`, payload);
+                    const summary = response?.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (summary) {
+                        showMessage(`**Chat Summary:** ${summary}`);
+                    } else {
+                        showMessage("Sorry, I couldn't generate a summary. Please try again.");
+                    }
+                } catch (error) {
+                    showMessage("Failed to summarize. Check the console for details.");
+                    console.error("Summarize API Error:", error);
+                }
+            });
+
+            // Read Aloud Feature
+            readAloudBtn.addEventListener('click', async () => {
+                const textToRead = chatInput.value.trim() || "Please type some text to read aloud.";
+                
+                showMessage("Generating audio...");
+
+                const payload = {
+                    contents: [{ parts: [{ text: textToRead }] }],
+                    generationConfig: {
+                        responseModalities: ["AUDIO"],
+                        speechConfig: {
+                            voiceConfig: {
+                                prebuiltVoiceConfig: { voiceName: "Puck" }
+                            }
+                        }
+                    },
+                    model: "gemini-2.5-flash-preview-tts"
+                };
+
+                try {
+                    const response = await callApi(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=`, payload);
+                    const audioPart = response?.candidates?.[0]?.content?.parts?.[0];
+
+                    if (audioPart && audioPart.inlineData) {
+                        const audioData = audioPart.inlineData.data;
+                        const sampleRate = parseInt(audioPart.inlineData.mimeType.match(/rate=(\d+)/)[1], 10);
+                        const pcmData = atob(audioData).split('').map(char => char.charCodeAt(0));
+                        const pcm16 = new Int16Array(pcmData.length);
+                        for(let i = 0; i < pcmData.length; i++) {
+                            pcm16[i] = pcmData[i];
+                        }
+                        
+                        const wavBlob = pcmToWav(pcm16, sampleRate);
+                        const audioUrl = URL.createObjectURL(wavBlob);
+                        const audio = new Audio(audioUrl);
+                        audio.play();
+                        showMessage("Playing audio now!");
+                    } else {
+                        showMessage("Failed to generate audio.");
+                    }
+                } catch (error) {
+                    showMessage("Error generating audio. See console.");
+                    console.error("TTS API Error:", error);
+                }
+            });
+
+            // Export Chat
+            exportChatBtn.addEventListener('click', () => {
+                const messages = Array.from(chatContent.children);
+                if (messages.length === 0) {
+                    showMessage("There are no messages to export.");
+                    return;
+                }
+
+                const chatText = messages.map(msgDiv => {
+                    const speaker = msgDiv.querySelector('span').textContent;
+                    const text = msgDiv.querySelector('p').textContent;
+                    return `${speaker} ${text}`;
+                }).join('\n');
+
+                const blob = new Blob([chatText], { type: 'text/plain' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = 'chat_history.txt';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(a.href);
+                
+                showMessage("Chat history exported successfully!");
+            });
+        });
+    </script>
+
+</body>
+</html>
